@@ -9,13 +9,10 @@ from tkinter import simpledialog, messagebox
 if __name__ == "__main__":
     pass
 
-logger = loggerjava
-route = input("txt route(the folder route contains the trains.txt,last char should be \ ):")
-
 
 # route = r"C:\Users\Administrator\AppData\LocalLow\bitrich\Rail Route\community levels\c6561489-282c-4e95-a084-237969c02e44\\"
 
-def get_text_input(title, prompt):
+def get_text_input(title, prompt, left=False):
     while True:
         result = None
 
@@ -29,9 +26,12 @@ def get_text_input(title, prompt):
 
         root = tk.Tk()
         root.title(title)
-        root.geometry("300x150")  # 设置窗口大小
+        root.geometry("500x250")  # 设置窗口大小
 
-        label = tk.Label(root, text=prompt)
+        if left:
+            label = tk.Label(root, text=prompt, justify='left')
+        else:
+            label = tk.Label(root, text=prompt, justify='center')
         label.pack(pady=10)
 
         entry = tk.Entry(root)
@@ -132,6 +132,66 @@ def get_number_input(title, prompt):
     raise ValueError("No valid number entered.")
 
 
+def display_nested_structure(obj, prefix='', indent=0):
+    lines = []
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            if isinstance(value, list):
+                # 特别处理嵌套列表，显示为 stop<n> 格式
+                lines.append(f"{prefix}{key}:")
+                for i, item in enumerate(value):
+                    lines.append(f"{prefix}    stop{i}: {item}")
+            else:
+                lines.append(f"{prefix}{key}: {value}")
+    elif isinstance(obj, list):
+        # 对于其他列表，简单地显示其内容（如果需要可以进一步格式化）
+        lines.append(str(obj))
+    else:
+        lines.append(str(obj))
+    return lines
+
+
+def display_dict_list(dict_list):
+    def on_prev():
+        nonlocal index
+        index = (index - 1) % len(dict_list)
+        update_label()
+
+    def on_exit():
+        root.destroy()
+
+    def on_next():
+        nonlocal index
+        index = (index + 1) % len(dict_list)
+        update_label()
+
+    def update_label():
+        current_dict = dict_list[index]
+        label_text = "\n".join(display_nested_structure(current_dict))
+        label.config(text=label_text)
+
+    root = tk.Tk()
+    root.geometry("500x250")  # 增加了高度以适应更多内容
+    root.title("Rail Route Schedule Editor")
+
+    index = 0
+
+    label = tk.Label(root, wraplength=450, justify=tk.LEFT)  # 增加wraplength以换行显示
+    label.pack(pady=20)
+
+    prev_button = tk.Button(root, text="prev", command=on_prev)
+    prev_button.pack(side=tk.LEFT, padx=10, pady=10)
+
+    exit_button = tk.Button(root, text="exit", command=on_exit)
+    exit_button.pack(side=tk.LEFT, padx=10, pady=10)
+
+    next_button = tk.Button(root, text="next", command=on_next)
+    next_button.pack(side=tk.LEFT, padx=10, pady=10)
+
+    update_label()
+    root.mainloop()
+
+
 def str_to_json_station(input_str):
     # 匹配格式中的变量名、名称和轨道编号
     match = re.match(r'# (\w+) = ([\w\d\s]+) \| .*? \| ([\d, ]+)', input_str)
@@ -158,8 +218,16 @@ def find_name_by_code(stations, code, type):
                 return station['name']
             elif type == 2:
                 return station
+            elif type == 3:
+                return station['track']
     return None
 
+def validate_time(time_str):
+    try:
+        datetime.strptime(time_str, '%H:%M:%S')
+        return True
+    except ValueError:
+        return False
 
 def search_train(train, trainnum):
     passed = False
@@ -265,6 +333,12 @@ def json_to_str_train(train_json):
     return final_str
 
 
+
+logger = loggerjava
+# route = input("txt route(the folder route contains the trains.txt,last char should be \ ):")
+route = get_text_input("Rail Route Schedule Editor",
+                       'the folder route contains the trains.txt,last char should be "\" \nthe trains.txt route:')
+
 logger.clearcurrentlog()
 logger.config(showinconsole=False, name="rail_route_schedule_editor_log")
 try:
@@ -285,7 +359,6 @@ with open(route + "trains.txt", mode="r", encoding="UTF-8") as f:
 logger.debug("Created backup file:" + route + "trains_backup.txt")
 stations = []
 trains = []
-
 for i in range(5, len(lines)):
     try:
         stations.append(str_to_json_station(lines[i]))
@@ -293,58 +366,92 @@ for i in range(5, len(lines)):
         linestop = i
         break
 # print(stations)
-logger.debug("showing read stations")
-print("read stations:")
-for i in stations:
-    print("name:%s\ncode:%s\ntrack:%s\n\n" % (i["name"], i["code"], i["track"]))
-    logger.debug("name:%s code:%s track:%s" % (i["name"], i["code"], i["track"]))
+# logger.debug("showing read stations")
+# print("read stations:")
+# for i in stations:
+#    print("name:%s\ncode:%s\ntrack:%s\n\n" % (i["name"], i["code"], i["track"]))
+#    logger.debug("name:%s code:%s track:%s" % (i["name"], i["code"], i["track"]))
 
 original_txt = copy.deepcopy(lines)
 original_txt2 = original_txt[:linestop + 22]
 original_txt3 = [item.rstrip('\n') for item in original_txt2]
 for i in range(linestop + 22, len(lines)):
     trains.append(str_to_json_train(lines[i]))
-logger.debug("showing read trains")
-print("read trains:")
-for i in trains:
-    # print(i)
-    print("trainnum:%s\ntraintype:%s\nspeedlimit:%s\ncomposition:%s\nflags:%s\n\nstops:" % (
-        i['train'], i['type'], i['speedmax'], i['composition'], i['flags']))
-    logger.debug("train:" + str(i))
-    for j in i["stops"]:
-        print("stop station:%s\nstoptrack:%s\narrivetime:%s\nstoptime:%smin\n" % (
-            find_name_by_code(stations, j["stationcode"], 1), j['stoptrack'], j['arrivetime'], j['stoptime']))
-    print("\n")
+# logger.debug("showing read trains")
+# print("read trains:")
+# for i in trains:
+#    print("trainnum:%s\ntraintype:%s\nspeedlimit:%s\ncomposition:%s\nflags:%s\n\nstops:" % (
+#        i['train'], i['type'], i['speedmax'], i['composition'], i['flags']))
+#    logger.debug("train:" + str(i))
+#    for j in i["stops"]:
+#        print("stop station:%s\nstoptrack:%s\narrivetime:%s\nstoptime:%smin\n" % (
+#            find_name_by_code(stations, j["stationcode"], 1), j['stoptrack'], j['arrivetime'], j['stoptime']))
+#    print("\n")
 
+
+# main add train
 while 1:
-    num = input("add a train(0 to exit),input the train num(contains |, like C114|C114):")
-    if num == "0":
+    # num = input("add a train(0 to exit),input the train num(contains |, like C114|C114):")
+    choice = get_radio_selection("Rail Route Schedule Editor", 'choose the function:',
+                                 ['show trains', 'show stations', 'add a new train', 'exit'])
+    if choice == 0:
+        display_dict_list(trains)
+        continue
+    elif choice == 1:
+        display_dict_list(stations)
+        continue
+    elif choice == 3:
         break
     else:
         pass
+    num = get_text_input("Rail Route Schedule Editor", 'input the train num(contains |, like C114|C114):')
     if not search_train(trains, num):
         pass
     else:
-        print("train num exists")
+        messagebox.showerror("Rail Route Schedule Editor", 'Train Number Exists!')
         logger.warn("train num exists:" + num)
         continue
+    # train type
     radio_options = ["COMMUTER", "FREIGHT", "IC", "URBAN"]
     type = get_radio_selection("Rail Route Schedule Editor", "choose train type:", radio_options)
+    # spdmax
     spdmax = get_number_input("Rail Route Schedule Editor", "speed limit:")
     typee = radio_options[type]
-    print("""TrainComposition format:
-vvv...
-Each v represents one vehicle. 
-L = locomotive (or control post), C = cargo car, P = passenger car""")
-    composition = input("train composition:")
-    print("""Flags format:
-ff
-Each f is one flag. 0 = flag not set, 1 = flag set, X = position not used
-Flag positions:
-#1 unused (X)
-#2 NoBrakingPenalization - if set (1), train does NOT receive penalization when braking at signals
-    """)
-    flags = input("flags:")
+
+    # composition
+    while True:
+        composition = get_text_input("Rail Route Schedule Editor", "TrainComposition format:\n"
+                                                                   'vvv...\n'
+                                                                   'Each v represents one vehicle. \n'
+                                                                   'L = locomotive (or control post), C = cargo car, P = passenger car\n'
+                                                                   'train composition:', left=True)
+        notpass = False
+        for f in composition:
+            if f not in ['L', 'C', 'P']:
+                notpass = True
+        if not notpass:
+            break
+        else:
+            messagebox.showerror("Rail Route Schedule Editor", 'error composition format!')
+
+    # flags
+    while True:
+        flags = get_text_input("Rail Route Schedule Editor", "Flags format:\n"
+                                                             'ff\n'
+                                                             'Each f is one flag. 0 = flag not set, 1 = flag set, X = position not used\n'
+                                                             'Flag positions:\n'
+                                                             '#1 unused (X)\n'
+                                                             '#2 NoBrakingPenalization - if set (1), train does NOT receive\n'
+                                                             ' penalization when braking at signals\n'
+                                                             'flags:', left=True)
+        notpass = False
+        for f in flags:
+            if f not in ['X', '0', '1']:
+                notpass = True
+        if not notpass:
+            break
+        else:
+            messagebox.showerror("Rail Route Schedule Editor", 'error flag format!')
     for i in stations:
         print("name:%s\ncode:%s\ntrack:%s\n\n" % (i["name"], i["code"], i["track"]))
         stops = []
