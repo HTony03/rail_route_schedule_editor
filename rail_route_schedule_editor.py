@@ -13,10 +13,10 @@ if __name__ == "__main__":
 # route = r"C:\Users\Administrator\AppData\LocalLow\bitrich\Rail Route\community levels\c6561489-282c-4e95-a084-237969c02e44\\"
 logger = loggerjava
 # route = input("txt route(the folder route contains the trains.txt,last char should be \ ):")
-logger.clearcurrentlog()
 logger.config(showinconsole=True, name="rail_route_schedule_editor_log")
+logger.clearcurrentlog()
 try:
-    def get_text_input(title, prompt, left=False):
+    def get_text_input(title, prompt, left=False,checkclose=False):
         while True:
             result = None
 
@@ -26,7 +26,14 @@ try:
                 root.destroy()
 
             def on_cancel():
-                root.destroy()
+                if checkclose:
+                    if simpledialog.askokcancel("确认", "你确定要退出吗？"):
+                        root.destroy()  # 如果用户点击“确定”，则销毁窗口
+                        exiting = True
+                    else:
+                        pass  # 如果用户点击“取消”，则不执行任何操作
+                else:
+                    root.destroy()
 
             root = tk.Tk()
             root.title(title)
@@ -52,6 +59,8 @@ try:
             root.wait_window(root)  # 等待窗口关闭
             if result is not None and result != "":
                 return result
+            if exiting and checkclose:
+                exit(0)
 
 
     def get_radio_selection(title, prompt, options):
@@ -336,6 +345,10 @@ try:
 
         return final_str
 
+    def addtrain():
+        global trainadded
+        pass
+
     loggerjava.register_def(json_to_str_train)
     loggerjava.register_def(str_to_json_train)
     loggerjava.register_def(str_to_json_stops)
@@ -348,9 +361,10 @@ try:
     loggerjava.register_def(get_text_input)
     loggerjava.register_def(get_number_input)
     loggerjava.register_def(str_to_json_station)
+    loggerjava.register_def(addtrian)
 
     route = get_text_input("Rail Route Schedule Editor",
-                           'the folder route contains the trains.txt,last char should be "\" \nthe trains.txt route:')
+                           'the folder route contains the trains.txt,last char should be "\\" \nthe trains.txt route:',checkclose=True)
     try:
         f = open(route + "trains.txt", mode="r", encoding="UTF-8")
         logger.debug("Opening file:" + route + "trains.txt")
