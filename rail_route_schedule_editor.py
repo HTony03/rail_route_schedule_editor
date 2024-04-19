@@ -19,15 +19,17 @@ try:
     def get_text_input(title, prompt, left=False,checkclose=False):
         while True:
             result = None
-
+            exiting = False
             def on_ok():
                 nonlocal result
                 result = entry.get()
                 root.destroy()
 
             def on_cancel():
+
                 if checkclose:
-                    if simpledialog.askokcancel("确认", "你确定要退出吗？"):
+                    nonlocal exiting
+                    if messagebox.askokcancel("确认", "你确定要退出吗？"):
                         root.destroy()  # 如果用户点击“确定”，则销毁窗口
                         exiting = True
                     else:
@@ -237,7 +239,7 @@ try:
 
     def validate_time(time_str):
         try:
-            datetime.strptime(time_str, '%H:%M:%S')
+            re.match(time_str, '%H:%M:%S')
             return True
         except ValueError:
             return False
@@ -346,13 +348,13 @@ try:
         return final_str
 
     def addtrain():
-        num = get_text_input("Rail Route Schedule Editor", 'input the train num(contains |, like C114|C114):')
-        if not search_train(trains, num):
-            pass
-        else:
-            messagebox.showerror("Rail Route Schedule Editor", 'Train Number Exists!')
-            logger.warn("train num exists:" + num)
-            continue
+        while True:
+            num = get_text_input("Rail Route Schedule Editor", 'input the train num(contains |, like C114|C114):')
+            if not search_train(trains, num):
+                break
+            else:
+                messagebox.showerror("Rail Route Schedule Editor", 'Train Number Exists!')
+                logger.warn("train num exists:" + num)
         # train type
         radio_options = ["COMMUTER", "FREIGHT", "IC", "URBAN"]
         type = get_radio_selection("Rail Route Schedule Editor", "choose train type:", radio_options)
@@ -416,12 +418,12 @@ try:
             
             tracks = gettracks(stations[stationselect]['track'])
             tracks.append('0')
-            logger.debug('readed tracks:'+tracks)
+            logger.debug('readed tracks:'+str(tracks))
             stoptrack2 = get_radio_selection('Rail Route Schedule Editor','select the stop track\n0 for any track',tracks)
             stoptrack = tracks[stoptrack2]
             correctformat = False
             while not correctformat:
-                arrivetime = get_number_input('Rail Route Schedule Editor','the time train arrives at the station\nformat: hh:mm:ss')
+                arrivetime = get_text_input('Rail Route Schedule Editor','the time train arrives at the station\nformat: hh:mm:ss')
                 if validate_time(arrivetime):
                     correctformat = True
                 else:
@@ -503,7 +505,8 @@ try:
         elif choice == 1:
             display_dict_list(stations)
         elif choice == 2:
-            trains.append(addtrain)
+            train = addtrain()
+            trains.append(train)
         elif choice == 3:
             break
         else:
@@ -515,7 +518,7 @@ try:
             f.write("\n".join(original_txt3))
     os.system("pause")
     exit(0)
-            '''
+    '''
         num = get_text_input("Rail Route Schedule Editor", 'input the train num(contains |, like C114|C114):')
         if not search_train(trains, num):
             pass
