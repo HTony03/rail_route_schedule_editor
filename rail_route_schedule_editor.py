@@ -348,7 +348,91 @@ try:
     def addtrain():
         global trainadded
         pass
+        while True:
+            num = get_text_input("Rail Route Schedule Editor", 'input the train num(contains |, like C114|C114):')
+            if not search_train(trains, num):
+                break
+            else:
+                messagebox.showerror("Rail Route Schedule Editor", 'Train Number Exists!')
+                logger.warn("train num exists:" + num)
+        
+        # train type
+        radio_options = ["COMMUTER", "FREIGHT", "IC", "URBAN"]
+        type = get_radio_selection("Rail Route Schedule Editor", "choose train type:", radio_options)
+        # spdmax
+        spdmax = get_number_input("Rail Route Schedule Editor", "speed limit:")
+        typee = radio_options[type]
 
+        # composition
+        while True:
+            composition = get_text_input("Rail Route Schedule Editor", "TrainComposition format:\n"
+                                                                       'vvv...\n'
+                                                                       'Each v represents one vehicle. \n'
+                                                                       'L = locomotive (or control post), C = cargo car, P = passenger car\n'
+                                                                       'train composition:', left=True)
+            notpass = False
+            for f in composition:
+                if f not in ['L', 'C', 'P']:
+                    notpass = True
+            if not notpass:
+                break
+            else:
+                messagebox.showerror("Rail Route Schedule Editor", 'error composition format!')
+
+        # flags
+        while True:
+            flags = get_text_input("Rail Route Schedule Editor", "Flags format:\n"
+                                                                 'ff\n'
+                                                                 'Each f is one flag. 0 = flag not set, 1 = flag set, X = position not used\n'
+                                                                 'Flag positions:\n'
+                                                                 '#1 unused (X)\n'
+                                                                 '#2 NoBrakingPenalization - if set (1), train does NOT receive\n'
+                                                                 ' penalization when braking at signals\n'
+                                                                 'flags:', left=True)
+            notpass = False
+            for f in flags:
+                if f not in ['X', '0', '1']:
+                    notpass = True
+            if f[0] != "X":
+                notpass = True
+            if not notpass:
+                break
+            else:
+                messagebox.showerror("Rail Route Schedule Editor", 'error flag format!')
+        for i in stations:
+            print("name:%s\ncode:%s\ntrack:%s\n\n" % (i["name"], i["code"], i["track"]))
+            stops = []
+        
+        while 1:
+            staioncode = input("the stop station's code(input exit to exit):")
+            if staioncode == "exit":
+                break
+            try:
+                stoptrack = int(input("the track train stops(0 for any track):"))
+                arrivetime = input("the time train arrives the station(format:hh:mm:ss):")
+                stoptime = int(input("the time train stops(in minutes):"))
+            except Exception as E:
+                print("invaid input")
+                logger.warn(loggerjava.exceptionhandler.handler(E))
+                continue
+            stops.append(
+                {'stationcode': staioncode, 'stoptrack': stoptrack, 'arrivetime': arrivetime, 'stoptime': stoptime})
+        trains.append(
+            {'train': num, 'type': typee, 'speedmax': spdmax, 'composition': composition, 'flags': flags, 'stops': stops})
+        logger.debug(
+            "Added train:" + {'train': num, 'type': typee, 'speedmax': spdmax, 'composition': composition, 'flags': flags,
+                              'stops': stops})
+    logger.debug("Writing to file:" + route + "trains.txt")
+    for i in trains:
+        original_txt3.append(json_to_str_train(i))
+        with open(route + "trains.txt", mode="w", encoding="UTF-8") as f:
+            f.write("\n".join(original_txt3))
+
+    def gettracks(trackstr):
+        pattern = r'\d+'
+    # 使用re.findall找到所有匹配项
+        matches = re.findall(pattern, trackstr)
+        return matches
     loggerjava.register_def(json_to_str_train)
     loggerjava.register_def(str_to_json_train)
     loggerjava.register_def(str_to_json_stops)
@@ -477,13 +561,26 @@ try:
                 break
             else:
                 messagebox.showerror("Rail Route Schedule Editor", 'error flag format!')
+        #for i in stations:
+        #    print("name:%s\ncode:%s\ntrack:%s\n\n" % (i["name"], i["code"], i["track"]))
+        stops = []
+        stopname = []
+        stoptrack = []
         for i in stations:
-            print("name:%s\ncode:%s\ntrack:%s\n\n" % (i["name"], i["code"], i["track"]))
-            stops = []
+            stopname.append(str(i['name'] + '(' + i['code'] + ')'))
+            stoptrack.append(i['track'])
+        stopname.append("exit")
         while 1:
-            staioncode = input("the stop station's code(input exit to exit):")
-            if staioncode == "exit":
+            #staioncode = input("the stop station's code(input exit to exit):")
+            stationselect = get_radio_selection('Rail Route Schedule Editor','select the stop',stopname)
+            
+            #if staioncode == "exit":
+            #    break
+            if stationselect == len(stopname)-1:
                 break
+            stationcode = stations[stationselect]['code']
+            
+            '''
             try:
                 stoptrack = int(input("the track train stops(0 for any track):"))
                 arrivetime = input("the time train arrives the station(format:hh:mm:ss):")
@@ -492,13 +589,33 @@ try:
                 print("invaid input")
                 logger.warn(loggerjava.exceptionhandler.handler(E))
                 continue
+            '''
+            
+            tracks = gettracks(stations[stationselect]['track'])
+            tracks.append('0')
+            logger.debug('readed tracks:'+tracks)
+            stoptrack2 = get_radio_selection('Rail Route Schedule Editor','select the stop track\n0 for any track',tracks)
+            stoptrack = tracks[stoptrack2]
+            correctformat = False
+            while not correctformat:
+                arrivetime = get_number_input('Rail Route Schedule Editor','the time train arrives at the station\nformat: hh:mm:ss')
+                if validate_time(arrivetime):
+                    correctformat = True
+                else:
+                    messagebox.showerror("Rail Route Schedule Editor", \
+                    'error time format!')
+            stoptime = get_number_input('Rail Route Shedule Editor',\
+            'input the time train stops(in minutes)')    
+                
             stops.append(
-                {'stationcode': staioncode, 'stoptrack': stoptrack, 'arrivetime': arrivetime, 'stoptime': stoptime})
+                {'stationcode': staioncode, 'stoptrack': stoptrack,\
+                 'arrivetime': arrivetime, 'stoptime': stoptime})
         trains.append(
-            {'train': num, 'type': typee, 'speedmax': spdmax, 'composition': composition, 'flags': flags, 'stops': stops})
+            {'train': num, 'type': typee, 'speedmax': spdmax,\
+             'composition': composition, 'flags': flags, 'stops': stops})
         logger.debug(
-            "Added train:" + {'train': num, 'type': typee, 'speedmax': spdmax, 'composition': composition, 'flags': flags,
-                              'stops': stops})
+            "Added train:" + {'train': num, 'type': typee, 'speedmax': spdmax, \
+            'composition': composition, 'flags': flags,'stops': stops})
     logger.debug("Writing to file:" + route + "trains.txt")
     for i in trains:
         original_txt3.append(json_to_str_train(i))
