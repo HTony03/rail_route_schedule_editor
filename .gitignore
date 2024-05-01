@@ -10,7 +10,7 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-dist/
+#dist/
 downloads/
 eggs/
 .eggs/
@@ -163,6 +163,6 @@ cython_debug/
 .classes
 logs
 node_modules
-dist
 dist-ssr
 *.local
+/zip_exe.bat
