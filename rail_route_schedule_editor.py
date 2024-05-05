@@ -43,10 +43,13 @@ try:
                         pass
                 else:
                     root.destroy()
+            def enterpress(event):
+                ok_btn.invoke()
 
             root = tk.Tk()
             root.title(title)
             root.geometry("500x250")
+            root.protocol("WM_DELETE_WINDOW", on_cancel)
 
             if left:
                 label = tk.Label(root, text=prompt, justify='left')
@@ -57,11 +60,13 @@ try:
             entry = tk.Entry(root)
             entry.pack(pady=5)
 
-            ok_btn = tk.Button(root, text="OK", command=on_ok)
+            ok_btn = tk.Button(root, text=translations['tkinter.ok'], command=on_ok)
             ok_btn.pack(side=tk.RIGHT, padx=5, pady=5)
 
-            cancel_btn = tk.Button(root, text="Cancel", command=on_cancel)
+            cancel_btn = tk.Button(root, text=translations['tkinter.cancel'], command=on_cancel)
             cancel_btn.pack(side=tk.RIGHT, padx=5, pady=5)
+
+            entry.bind("<Return>", enterpress)
 
             root.grab_set()  # 确保模态对话框行为
             root.transient(root.master)  # 确保对话框与主窗口关联
@@ -76,7 +81,11 @@ try:
         return -1
 
 
-    def get_radio_selection(title, prompt, options):
+    def get_radio_selection(title, prompt, options,returns=False):
+        def enterperss():
+            if returns:
+                btn.invoke()
+
         # 创建主窗口
         root = tk.Tk()
         root.title(title)
@@ -88,6 +97,8 @@ try:
         # 初始化变量，用于存储选中的按钮索引
         var = tk.StringVar()
         var.set("")  # 初始设置为空字符串
+
+        root.protocol("WM_DELETE_WINDOW", enterperss)
 
         # 创建一个Frame用于放置按钮，并设置居中
         button_frame = tk.Frame(root)
@@ -129,9 +140,13 @@ try:
             def on_cancel():
                 root.destroy()
 
+            def enterpress(event):
+                ok_btn.invoke()
+
             root = tk.Tk()
             root.title(title)
             root.geometry("300x150")  # 设置窗口大小
+            root.protocol("WM_DELETE_WINDOW", on_cancel)
 
             label = tk.Label(root, text=prompt)
             label.pack(pady=10)
@@ -139,11 +154,13 @@ try:
             entry = tk.Entry(root)
             entry.pack(pady=5)
 
-            ok_btn = tk.Button(root, text="OK", command=on_ok)
+            ok_btn = tk.Button(root, text=translations['tkinter.ok'], command=on_ok)
             ok_btn.pack(side=tk.RIGHT, padx=5, pady=5)
 
-            cancel_btn = tk.Button(root, text="Cancel", command=on_cancel)
+            cancel_btn = tk.Button(root, text=translations['tkinter.cancel'], command=on_cancel)
             cancel_btn.pack(side=tk.RIGHT, padx=5, pady=5)
+
+            entry.bind("<Return>", enterpress)
 
             root.grab_set()  # 确保模态对话框行为
             root.transient(root.master)  # 确保对话框与主窗口关联
@@ -199,6 +216,7 @@ try:
         root = tk.Tk()
         root.geometry("500x250")  # 增加了高度以适应更多内容
         root.title("Rail Route Schedule Editor")
+        root.protocol("WM_DELETE_WINDOW", on_exit)
 
         index = 0
 
@@ -209,9 +227,9 @@ try:
         button_frame = tk.Frame(root)
         button_frame.pack(side=tk.BOTTOM, fill=tk.X, pady=10)  # 放置在底部，并水平填充
 
-        prev_button = tk.Button(button_frame, text="prev", command=on_prev)
-        exit_button = tk.Button(button_frame, text="exit", command=on_exit)
-        next_button = tk.Button(button_frame, text="next", command=on_next)
+        prev_button = tk.Button(button_frame, text=translations['tkinter.prev'], command=on_prev)
+        exit_button = tk.Button(button_frame, text=translations['tkinter.exit'], command=on_exit)
+        next_button = tk.Button(button_frame, text=translations['tkinter.next'], command=on_next)
 
         button_frame.columnconfigure(0, weight=1)  # 创建一个权重为1的列
         button_frame.columnconfigure(1, weight=1)  # 创建一个权重为1的列（用于间距）
@@ -373,31 +391,31 @@ try:
 
     def addtrain():
         while True:
-            num = get_text_input("Rail Route Schedule Editor", 'input the train num(contains |, like C114|C114):',
-                                 returnn=True)
+            num = get_text_input("Rail Route Schedule Editor",
+                                 translations["info.gettrainnum"], returnn=True)
             if num == '-1':
                 return
             if not search_train(trains, num):
                 break
             else:
-                messagebox.showerror("Rail Route Schedule Editor", 'Train Number Exists!')
+                messagebox.showerror("Rail Route Schedule Editor", translations["warning.trainnumexist"])
                 logger.warn("train num exists:" + num)
         # train type
-        radio_options = ["COMMUTER", "FREIGHT", "IC", "URBAN"]
-        type = get_radio_selection("Rail Route Schedule Editor", "choose train type:", radio_options)
+        radio_options = eval(translations['selection.traintype'])
+        type = get_radio_selection("Rail Route Schedule Editor", translations["info.gettraintype"], radio_options)
         # spdmax
-        spdmax = get_number_input("Rail Route Schedule Editor", "speed limit:")
+        spdmax = get_number_input("Rail Route Schedule Editor", translations["info.getmaxspd"])
         typee = radio_options[type]
 
         # composition
         while True:
             composition = get_text_input("Rail Route Schedule Editor",
-                                         '''TrainComposition format:
-                                         vvv...
-                                         Each v represents one vehicle. 
-                                         L = locomotive (or control post), C = cargo car, P = passenger car
-                                         Train Composition:
-                                         ''', left=True)
+                                         translations['info.getcomposition.desc1'] +
+                                         translations['info.getcomposition.desc2'] +
+                                         translations['info.getcomposition.desc3'] +
+                                         translations['info.getcomposition.desc4'] +
+                                         translations['info.getcomposition']
+                                         , left=True)
             notpass = False
             for f in composition:
                 if f not in ['L', 'C', 'P']:
@@ -405,7 +423,7 @@ try:
             if not notpass:
                 break
             else:
-                messagebox.showerror("Rail Route Schedule Editor", 'error composition format!')
+                messagebox.showerror("Rail Route Schedule Editor", translations['warning.errformat'].format(translations['name.composition']))
 
         # flags
         while True:
@@ -427,7 +445,7 @@ try:
             if not notpass:
                 break
             else:
-                messagebox.showerror("Rail Route Schedule Editor", 'error flag format!')
+                messagebox.showerror("Rail Route Schedule Editor",  translations['warning.errformat'].format(translations['name.flag']))
 
         stops = []
         stopname = []
@@ -456,8 +474,8 @@ try:
                 if validate_time(arrivetime):
                     correctformat = True
                 else:
-                    messagebox.showerror("Rail Route Schedule Editor",
-                                         'error time format!')
+                    messagebox.showerror("Rail Route Schedule Editor",translations['warning.errformat']
+                                         .format(translations['name.time']))
             stoptime = get_number_input('Rail Route Shedule Editor',
                                         'input the time train stops(in minutes)')
 
@@ -568,7 +586,7 @@ try:
     # main add train
     while 1:
         choice = get_radio_selection("Rail Route Schedule Editor", translations['main.choosefunc'],
-                                     eval(translations['main.funcselection']))
+                                     eval(translations['main.funcselection']),returns=True)
         if choice == 0:
             display_dict_list(trains)
         elif choice == 1:
