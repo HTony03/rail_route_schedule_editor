@@ -60,11 +60,23 @@ try:
             entry = tk.Entry(root)
             entry.pack(pady=5)
 
-            ok_btn = tk.Button(root, text=translations['tkinter.ok'], command=on_ok)
-            ok_btn.pack(side=tk.RIGHT, padx=5, pady=5)
+            button_frame = tk.Frame(root)
+            button_frame.pack(side=tk.BOTTOM, fill=tk.X, pady=10)  # 放置在底部，并水平填充
 
-            cancel_btn = tk.Button(root, text=translations['tkinter.cancel'], command=on_cancel)
-            cancel_btn.pack(side=tk.RIGHT, padx=5, pady=5)
+            ok_btn = tk.Button(button_frame, text=translations['tkinter.ok'], command=on_ok)
+            cancel_btn = tk.Button(button_frame, text=translations['tkinter.cancel'], command=on_cancel)
+
+            button_frame.columnconfigure(0, weight=1)  # 创建一个权重为1的列
+            button_frame.columnconfigure(1, weight=1)  # 创建一个权重为1的列
+
+            # 使用grid布局将按钮放置在button_frame中，并确保它们居中
+            ok_btn.grid(row=0, column=0, padx=10, pady=5)
+            cancel_btn.grid(row=0, column=1, padx=10, pady=5)
+
+            # 确保button_frame中的列均匀分布
+            for i in range(2):
+                button_frame.grid_columnconfigure(i, weight=1)
+
 
             entry.bind("<Return>", enterpress)
 
@@ -428,15 +440,14 @@ try:
         # flags
         while True:
             flags = get_text_input("Rail Route Schedule Editor",
-                                   '''Flags format:
-                                   ff
-                                   Each f is one flag. 0 = flag not set, 1 = flag set, X = position not used
-                                   Flag positions:
-                                   #1 unused (X)
-                                   #2 NoBrakingPenalization - if set (1), train does NOT receive
-                                   penalization when braking at signals
-                                   Flags:
-                                   ''', left=True)
+                                   translations['info.getflag.desc1'] +
+                                   translations['info.getflag.desc2'] +
+                                   translations['info.getflag.desc3'] +
+                                   translations['info.getflag.desc4'] +
+                                   translations['info.getflag.desc5'] +
+                                   translations['info.getflag.desc6'] +
+                                   translations['info.getflag.desc7'] +
+                                   translations['info.getflag'], left=True)
 
             notpass = False
             for f in flags:
@@ -455,7 +466,7 @@ try:
             stoptrack.append(i['track'])
         stopname.append("exit")
         while 1:
-            stationselect = get_radio_selection('Rail Route Schedule Editor', 'select the stop', stopname)
+            stationselect = get_radio_selection('Rail Route Schedule Editor', translations['info.getstop'], stopname)
 
             if stationselect == len(stopname) - 1:
                 break
@@ -464,20 +475,20 @@ try:
             tracks = gettracks(stations[stationselect]['track'])
             tracks.append('0')
             logger.debug('readed tracks:' + str(tracks))
-            stoptrack2 = get_radio_selection('Rail Route Schedule Editor', 'select the stop track\n0 for any track',
+            stoptrack2 = get_radio_selection('Rail Route Schedule Editor', translations['info.getstoptrack'],
                                              tracks)
             stoptrack = tracks[stoptrack2]
             correctformat = False
             while not correctformat:
                 arrivetime = get_text_input('Rail Route Schedule Editor',
-                                            'the time train arrives at the station\nformat: hh:mm:ss')
+                                            translations['info.getarrivetime'])
                 if validate_time(arrivetime):
                     correctformat = True
                 else:
                     messagebox.showerror("Rail Route Schedule Editor",translations['warning.errformat']
                                          .format(translations['name.time']))
             stoptime = get_number_input('Rail Route Shedule Editor',
-                                        'input the time train stops(in minutes)')
+                                        translations['info.getstoptime'])
 
             stops.append(
                 {'stationcode': stationcode, 'stoptrack': stoptrack,
@@ -544,7 +555,7 @@ try:
     except json.JSONDecodeError as E:
         logger.warn(loggerjava.exceptionhandler.handler(E), showinconsole=True)
         messagebox.showerror('Rail Route Schedule Editor', 'Translation file:\\translation\\' + lang +
-                             '.json seems to be broken.\nplease redownload the translation files')
+                             '.json seems to be broken.\nplease redownload the translation files and replace them')
         os.system("pause")
         os._exit(5)
 
@@ -610,5 +621,5 @@ try:
 
 except Exception as E:
     logger.error(logger.handler(E))
-    messagebox.showerror('EEEERRRRRRRROOOORRRR', "Error occurred,please upload the log to github and report the bug!")
+    messagebox.showerror(translations["exceptionhandler.title"], translations['exceptionhandler.msg'])
     os._exit(105)

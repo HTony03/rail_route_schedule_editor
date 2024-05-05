@@ -29,5 +29,19 @@
   "info.getcomposition.desc3": "Each v represents one vehicle. \n",
   "info.getcomposition.desc4": "L = locomotive (or control post), C = cargo car, P = passenger car\n",
   "info.getcomposition": "please enter the composition of the train:",
-  "warning.errformat": "error %s format!"
+  "warning.errformat": "error %s format!",
+  "info.getflag.desc1": "Flags format:\n",
+  "info.getflag.desc2": "ff\n",
+  "info.getflag.desc3": "Each f is one flag. 0 = flag not set, 1 = flag set, X = position not used\n",
+  "info.getflag.desc4": "Flag positions:\n",
+  "info.getflag.desc5": "#1 unused (X)\n",
+  "info.getflag.desc6": "#2 NoBrakingPenalization - if set (1), train does NOT receive\n",
+  "info.getflag.desc7": "penalization when braking at signals\n",
+  "info.getflag": "please enter the flags of the train:",
+  "info.getstop": "please select the stop:",
+  "info.getstoptrack": "please select the stop track:\n0 for any track",
+  "info.getarrivetime": "please enter the time train arrives at the station:\nformat: hh:mm:ss",
+  "info.getstoptime": "please enter the time train stops at the station(in minutes):",
+  "exceptionhandler.title": "EEEERRRRRRRROOOORRRR",
+  "exceptionhandler.msg": "Error occurred,please upload the log to github and report the bug!"
 }
