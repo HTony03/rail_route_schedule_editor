@@ -10,13 +10,13 @@ import json
 if __name__ == "__main__":
     pass
 
-# route = r"C:\Users\Administrator\AppData\LocalLow\bitrich\Rail Route\community levels\c6561489-282c-4e95-a084-237969c02e44\\"
+# "C:\Users\Administrator\AppData\LocalLow\bitrich\Rail Route\community levels\c6561489-282c-4e95-a084-237969c02e44\\"
 logger = loggerjava
 # route = input("txt route(the folder route contains the trains.txt,last char should be \ ):")
 logger.config(showinconsole=True, name="rail_route_schedule_editor_log")
 logger.clearcurrentlog()
 try:
-    def get_text_input(title, prompt, left=False, checkclose=False):
+    def get_text_input(title, prompt, left=False, checkclose=False, returnn=False):
         while True:
             result = None
             exiting = False
@@ -27,20 +27,26 @@ try:
                 root.destroy()
 
             def on_cancel():
-
+                nonlocal exiting
                 if checkclose:
-                    nonlocal exiting
-                    if messagebox.askokcancel("Confirm?", "Do you want to quit the program?"):
-                        root.destroy()  # 如果用户点击“确定”，则销毁窗口
+
+                    if messagebox.askokcancel(translations['tkinter.confirm'], translations['tkinter.exitinfo']):
+                        root.destroy()
                         exiting = True
                     else:
-                        pass  # 如果用户点击“取消”，则不执行任何操作
+                        pass
+                if returnn:
+                    if messagebox.askokcancel(translations['tkinter.confirm'], translations['tkinter.returninfo']):
+                        root.destroy()
+                        exiting = True
+                    else:
+                        pass
                 else:
                     root.destroy()
 
             root = tk.Tk()
             root.title(title)
-            root.geometry("500x250")  # 设置窗口大小
+            root.geometry("500x250")
 
             if left:
                 label = tk.Label(root, text=prompt, justify='left')
@@ -64,6 +70,8 @@ try:
                 return result
             if exiting and checkclose:
                 os._exit(0)
+                return "-1"
+            if returnn and exiting:
                 return "-1"
         return -1
 
@@ -116,7 +124,7 @@ try:
                     result = int(entry.get())
                     root.destroy()
                 except ValueError:
-                    messagebox.showerror("Error", "Please enter a valid number.")
+                    messagebox.showerror(translations['tkinter.error'], translations['tkinter.invaidnum'])
 
             def on_cancel():
                 root.destroy()
@@ -197,14 +205,26 @@ try:
         label = tk.Label(root, wraplength=450, justify=tk.LEFT)  # 增加wraplength以换行显示
         label.pack(pady=20)
 
-        prev_button = tk.Button(root, text="prev", command=on_prev)
-        prev_button.pack(side=tk.LEFT, padx=10, pady=10)
+        # 创建一个frame来放置按钮，并使用grid布局
+        button_frame = tk.Frame(root)
+        button_frame.pack(side=tk.BOTTOM, fill=tk.X, pady=10)  # 放置在底部，并水平填充
 
-        exit_button = tk.Button(root, text="exit", command=on_exit)
-        exit_button.pack(side=tk.LEFT, padx=10, pady=10)
+        prev_button = tk.Button(button_frame, text="prev", command=on_prev)
+        exit_button = tk.Button(button_frame, text="exit", command=on_exit)
+        next_button = tk.Button(button_frame, text="next", command=on_next)
 
-        next_button = tk.Button(root, text="next", command=on_next)
-        next_button.pack(side=tk.LEFT, padx=10, pady=10)
+        button_frame.columnconfigure(0, weight=1)  # 创建一个权重为1的列
+        button_frame.columnconfigure(1, weight=1)  # 创建一个权重为1的列（用于间距）
+        button_frame.columnconfigure(2, weight=1)  # 创建一个权重为1的列
+
+        # 使用grid布局将按钮放置在button_frame中，并确保它们居中
+        prev_button.grid(row=0, column=0, padx=10, pady=5)
+        exit_button.grid(row=0, column=1, padx=10, pady=5)  # 这将是中间的按钮
+        next_button.grid(row=0, column=2, padx=10, pady=5)
+
+        # 确保button_frame中的列均匀分布
+        for i in range(3):
+            button_frame.grid_columnconfigure(i, weight=1)
 
         update_label()
         root.mainloop()
@@ -353,7 +373,10 @@ try:
 
     def addtrain():
         while True:
-            num = get_text_input("Rail Route Schedule Editor", 'input the train num(contains |, like C114|C114):')
+            num = get_text_input("Rail Route Schedule Editor", 'input the train num(contains |, like C114|C114):',
+                                 returnn=True)
+            if num == '-1':
+                return
             if not search_train(trains, num):
                 break
             else:
@@ -454,11 +477,12 @@ try:
         matches = re.findall(pattern, trackstr)
         return matches
 
+
     def createcfg():
-        lang_options = ['Engligh(en_us)','中文(zh_cn)']
-        lang = get_radio_selection("Rail Route Schedule Editor","Thank you for using this program.\n"
-                                                                "please select your language:",lang_options)
-        langg = ["en_us","zh_cn"]
+        lang_options = ['Engligh(en_us)', '中文(zh_cn)']
+        lang = get_radio_selection("Rail Route Schedule Editor", "Thank you for using this program.\n"
+                                                                 "please select your language:", lang_options)
+        langg = ["en_us", "zh_cn"]
 
         config = configparser.ConfigParser()
         config['DEFAULT'] = {'lang': langg[lang]}
@@ -482,6 +506,7 @@ try:
     loggerjava.register_def(addtrain)
     loggerjava.register_def(createcfg)
 
+    # cfg and translation part
     config_path = 'Rail_route_schedule_editor.cfg'
     if os.path.exists(config_path):
         config = configparser.ConfigParser()
@@ -490,24 +515,24 @@ try:
     else:
         lang = createcfg()
     try:
-        with open(r'.\\translation\\'+lang+'.json','r', encoding='utf-8') as f:
+        with open(r'.\\translation\\' + lang + '.json', 'r', encoding='utf-8') as f:
             translations = json.load(f)
     except FileNotFoundError as E:
         logger.warn(loggerjava.exceptionhandler.handler(E), showinconsole=True)
-        messagebox.showerror('Rail Route Schedule Editor', 'Translation file:\\translation\\' + lang +\
+        messagebox.showerror('Rail Route Schedule Editor', 'Translation file:\\translation\\' + lang +
                              '.json not exist\n')
         os.system("pause")
         os._exit(5)
     except json.JSONDecodeError as E:
         logger.warn(loggerjava.exceptionhandler.handler(E), showinconsole=True)
-        messagebox.showerror('Rail Route Schedule Editor', 'Translation file:\\translation\\' + lang +\
+        messagebox.showerror('Rail Route Schedule Editor', 'Translation file:\\translation\\' + lang +
                              '.json seems to be broken.\nplease redownload the translation files')
         os.system("pause")
         os._exit(5)
 
-
+    # get file location
     route = get_text_input("Rail Route Schedule Editor",
-                           translations["main.get_file_location"],checkclose=True)
+                           translations["main.get_file_location"], checkclose=True)
     try:
         f = open(route + "trains.txt", mode="r", encoding="UTF-8")
         logger.debug("Opening file:" + route + "trains.txt")
@@ -516,7 +541,7 @@ try:
 
     except Exception as E:
         logger.warn(loggerjava.exceptionhandler.handler(E), showinconsole=True)
-        messagebox.showerror('Rail Route Schedule Editor', 'Error opening the file:' + route + 'trains.txt\n' + str(E))
+        messagebox.showerror('Rail Route Schedule Editor', translations["main.fileopenerror"].format(route) + str(E))
         os.system("pause")
         os._exit(5)
 
@@ -542,15 +567,16 @@ try:
 
     # main add train
     while 1:
-        choice = get_radio_selection("Rail Route Schedule Editor", 'choose the function:',
-                                     ['show trains', 'show stations', 'add a new train', 'save&close'])
+        choice = get_radio_selection("Rail Route Schedule Editor", translations['main.choosefunc'],
+                                     eval(translations['main.funcselection']))
         if choice == 0:
             display_dict_list(trains)
         elif choice == 1:
             display_dict_list(stations)
         elif choice == 2:
             train = addtrain()
-            trains.append(train)
+            if train is not None:
+                trains.append(train)
         elif choice == 3:
             break
         else:
@@ -560,7 +586,7 @@ try:
         original_txt3.append(json_to_str_train(i))
         with open(route + "trains.txt", mode="w", encoding="UTF-8") as f:
             f.write("\n".join(original_txt3))
-    messagebox.showinfo("Rail Route Schedule Editor","Saved to the file,closing....")
+    messagebox.showinfo("Rail Route Schedule Editor", translations['main.saveclose'])
     os.system("pause")
     os._exit(0)
 

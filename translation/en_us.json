@@ -1,3 +1,12 @@
 {
-  "main.get_file_location": "please enter the folder location which trains.txt is located\nthe last char should be '\\'(for windows)\nthe folder location:"
+  "main.get_file_location": "please enter the folder location which trains.txt is located\nthe last char should be '\\'(for windows)\nthe folder location:",
+  "tkinter.confirm": "Confirm?",
+  "tkinter.exitinfo": "Do you want to quit the program?",
+  "tkinter.returninfo": "Do you want to return?",
+  "tkinter.error": "Error",
+  "tkinter.invaidnum": "Please enter a valid number.",
+  "main.fileopenerror": "Error opening the file: %strains.txt\nexiting",
+  "main.choosefunc": "Choose the function:",
+  "main.funcselection": "['show trains', 'show stations', 'add a new train', 'save&close']",
+  "main.saveexit": "Saved to the file,closing...."
 }

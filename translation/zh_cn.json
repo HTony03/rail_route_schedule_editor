@@ -1,3 +1,12 @@
 {
-  "main.get_file_location": "请输入您的trains.txt文件所在的文件夹的路径\n最后一个字符应当为\\(windows)\n文件夹路径："
+  "main.get_file_location": "请输入您的trains.txt文件所在的文件夹的路径\n最后一个字符应当为\\(windows)\n文件夹路径：",
+  "tkinter.confirm": "确认？",
+  "tkinter.exitinfo": "您确认要关闭软件吗？",
+  "tkinter.returninfo": "您确认要返回吗？",
+  "tkinter.error": "错误",
+  "tkinter.invaidnum": "请输入一个正确的数字",
+  "main.fileopenerror": "打开以下文件时出错：%strains.txt\n即将退出软件",
+  "main.choosefunc": "请选择您所需要的功能：",
+  "main.funcselection": "['显示所有列车', '显示所有车站', '添加一个新的列车', '保存&关闭']",
+  "main.saveclose": "文件已保存，正在退出...."
 }
