@@ -1,0 +1,3 @@
+{
+  "main.get_file_location": "please enter the folder location which trains.txt is located\nthe last char should be '\\'(for windows)\nthe folder location:"
+}

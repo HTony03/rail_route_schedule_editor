@@ -1,10 +1,11 @@
-# import json
 import copy
 import os
 import re
 import tkinter as tk
 from tkinter import messagebox
 import loggerjava
+import configparser
+import json
 
 if __name__ == "__main__":
     pass
@@ -453,6 +454,18 @@ try:
         matches = re.findall(pattern, trackstr)
         return matches
 
+    def createcfg():
+        lang_options = ['Engligh(en_us)','中文(zh_cn)']
+        lang = get_radio_selection("Rail Route Schedule Editor","Thank you for using this program.\n"
+                                                                "please select your language:",lang_options)
+        langg = ["en_us","zh_cn"]
+
+        config = configparser.ConfigParser()
+        config['DEFAULT'] = {'lang': langg[lang]}
+        with open('Rail_route_schedule_editor.cfg', 'w') as configfile:
+            config.write(configfile)
+        return langg[lang]
+
 
     loggerjava.register_def(json_to_str_train)
     loggerjava.register_def(str_to_json_train)
@@ -467,10 +480,34 @@ try:
     loggerjava.register_def(get_text_input)
     loggerjava.register_def(get_number_input)
     loggerjava.register_def(addtrain)
+    loggerjava.register_def(createcfg)
+
+    config_path = 'Rail_route_schedule_editor.cfg'
+    if os.path.exists(config_path):
+        config = configparser.ConfigParser()
+        config.read(config_path)
+        lang = config['DEFAULT'].get('lang', 'en_us')
+    else:
+        lang = createcfg()
+    try:
+        with open(r'.\\translation\\'+lang+'.json','r', encoding='utf-8') as f:
+            translations = json.load(f)
+    except FileNotFoundError as E:
+        logger.warn(loggerjava.exceptionhandler.handler(E), showinconsole=True)
+        messagebox.showerror('Rail Route Schedule Editor', 'Translation file:\\translation\\' + lang +\
+                             '.json not exist\n')
+        os.system("pause")
+        os._exit(5)
+    except json.JSONDecodeError as E:
+        logger.warn(loggerjava.exceptionhandler.handler(E), showinconsole=True)
+        messagebox.showerror('Rail Route Schedule Editor', 'Translation file:\\translation\\' + lang +\
+                             '.json seems to be broken.\nplease redownload the translation files')
+        os.system("pause")
+        os._exit(5)
+
 
     route = get_text_input("Rail Route Schedule Editor",
-                           'the folder route contains the trains.txt,last char should be "\\" \nthe trains.txt route:',
-                           checkclose=True)
+                           translations["main.get_file_location"],checkclose=True)
     try:
         f = open(route + "trains.txt", mode="r", encoding="UTF-8")
         logger.debug("Opening file:" + route + "trains.txt")
