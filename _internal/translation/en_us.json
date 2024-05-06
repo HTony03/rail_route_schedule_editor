@@ -42,6 +42,7 @@
   "info.getstoptrack": "please select the stop track:\n0 for any track",
   "info.getarrivetime": "please enter the time train arrives at the station:\nformat: hh:mm:ss",
   "info.getstoptime": "please enter the time train stops at the station(in minutes):",
+  "warning.notenoughstops": "too little stops!\n at least 2 stops should be added",
   "exceptionhandler.title": "EEEERRRRRRRROOOORRRR",
   "exceptionhandler.msg": "Error occurred,please upload the log to github and report the bug!"
 }

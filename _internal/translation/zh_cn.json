@@ -42,6 +42,7 @@
   "info.getstoptrack": "请选择列车的停站股道: \n0用于任意股道",
   "info.getarrivetime": "请输入列车到达车站的时间:\n格式: hh:mm:ss",
   "info.getstoptime": "请输入列车的停站时间(单位: 分钟):",
+  "warning.notenoughstops": "列车停站数过少! \n 请至少添加2个停站",
   "exceptionhandler.title": "EEEERRRRRRRROOOORRRR",
   "exceptionhandler.msg": "遇到错误，请将log上传至github并提交issue"
 }

@@ -43,6 +43,7 @@ try:
                         pass
                 else:
                     root.destroy()
+
             def enterpress(event):
                 ok_btn.invoke()
 
@@ -77,7 +78,6 @@ try:
             for i in range(2):
                 button_frame.grid_columnconfigure(i, weight=1)
 
-
             entry.bind("<Return>", enterpress)
 
             root.grab_set()  # 确保模态对话框行为
@@ -93,15 +93,25 @@ try:
         return -1
 
 
-    def get_radio_selection(title, prompt, options,returns=False):
+    def get_radio_selection(title, prompt, options, returns=False):
         def enterperss():
             if returns:
                 btn.invoke()
 
+        def calculate_columnspan(index, total_buttons, max_columns=4):
+            if total_buttons <= max_columns:
+                # 当总数小于等于4时，计算每个按钮的columnspan
+                return (index + 1) / (total_buttons+1)
+            else:
+                # 当总数大于4时，每行4个按钮
+                row = (index+1) // (max_columns+2)
+                col = index % (max_columns)
+                return 1  # 每个按钮占据一列
+
         # 创建主窗口
         root = tk.Tk()
         root.title(title)
-        root.geometry(f"500x300")
+        root.geometry(f"625x%s"%str(250+(len(options)//5+1)*27))
 
         # 窗口内的文字提示
         tk.Label(root, text=prompt).pack(pady=20)
@@ -112,23 +122,45 @@ try:
 
         root.protocol("WM_DELETE_WINDOW", enterperss)
 
+
+
         # 创建一个Frame用于放置按钮，并设置居中
         button_frame = tk.Frame(root)
-        button_frame.pack(pady=50, expand=True)  # 设置垂直间距并允许扩展
+        button_frame.pack(pady=50, expand=True, fill='x')  # 设置垂直间距并允许扩展
+        #button_frame.pack(expand=True, fill='both')
+
+        num_columns = max(len(options), 4)+2
+        for col in range(num_columns):
+            button_frame.columnconfigure(col, weight=1)
+
+        button_row = 0
+        button_col = 0
 
         # 创建一组水平排列的按钮
         buttons = []
         for i, option in enumerate(options):
+            columnspan = calculate_columnspan(i, len(options))
+            if columnspan > 1:
+                # 如果columnspan大于1，则合并列
+                button_frame.columnconfigure(button_col, minsize=int(root.winfo_width() * columnspan/len(options)))
+
+
             def on_button_click(index):
                 var.set(str(index))  # 设置选中的按钮索引
                 root.destroy()  # 销毁窗口
 
             # 使用lambda和默认参数来捕获当前的i值
             btn = tk.Button(button_frame, text=option, command=lambda idx=i: on_button_click(idx))
+            btn.grid(row=button_row, column=button_col+1, sticky='ew', padx=5)
             buttons.append(btn)
 
-            # 将按钮水平排列，并添加一些间距
-            btn.pack(side=tk.LEFT, padx=5, pady=50)
+            if (i + 1) % 4 == 0 or (i + 1) == len(options):
+                button_row += 1
+                button_col = 0
+            else:
+                button_col += 1
+
+
 
         # 运行窗口
         root.mainloop()
@@ -226,12 +258,12 @@ try:
             label.config(text=label_text)
 
         root = tk.Tk()
-        root.geometry("500x250")  # 增加了高度以适应更多内容
+         # 增加了高度以适应更多内容
         root.title("Rail Route Schedule Editor")
         root.protocol("WM_DELETE_WINDOW", on_exit)
 
         index = 0
-
+        root.geometry("550x%s" % str(160 + len(display_nested_structure(dict_list[index]))*20))
         label = tk.Label(root, wraplength=450, justify=tk.LEFT)  # 增加wraplength以换行显示
         label.pack(pady=20)
 
@@ -260,9 +292,51 @@ try:
         root.mainloop()
 
 
+    def sliding_selector(title, prompt, options):
+        def on_ok():
+            nonlocal selected_index
+            selected_index = listbox.curselection()
+            if selected_index:
+                selected_index = selected_index[0]
+                top.destroy()
+                return selected_index
+            else:
+                top.destroy()
+                return None
+
+        top = tk.Tk()
+        top.title(title)
+
+        selected_index = None
+
+
+        frame = tk.Frame(top)
+        frame.pack(pady=20, padx=20, fill='both', expand=True)
+
+        tk.Label(frame, text=prompt).pack(pady=(0, 10))
+
+        scrollbar = tk.Scrollbar(frame)
+        listbox = tk.Listbox(frame, yscrollcommand=scrollbar.set, exportselection=False)
+        scrollbar.config(command=listbox.yview)
+
+        for idx, option in enumerate(options):
+            listbox.insert(tk.END, option)
+
+        listbox.pack(side=tk.LEFT, fill='both', expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill='y')
+
+        ok_button = tk.Button(frame, text="确定", command=on_ok)
+        ok_button.pack(pady=10, side=tk.RIGHT)
+
+        top.mainloop()
+
+        # 如果没有选择直接返回None
+        return selected_index
+
+
     def str_to_json_station(input_str):
         # 匹配格式中的变量名、名称和轨道编号
-        match = re.match(r'# (\w+) = ([\w\d\s]+) \| .*? \| ([\d, ]+)', input_str)
+        match = re.match(r'# (\S+) = ([^\|]+) \| (\d+) \| ([\d, ]+)', input_str)
 
         if not match:
             raise ValueError("输入的格式不正确，请按照 # code = name | MayBeInitial | track 的格式输入")
@@ -270,7 +344,7 @@ try:
             # 提取匹配到的值
         code = match.group(1)
         name = match.group(2)
-        track = match.group(3).strip()  # 提取最后一个|后的track数据
+        track = match.group(4).strip()  # 提取最后一个|后的track数据
 
         data = {"name": name, "code": code, "track": track}
 
@@ -325,6 +399,7 @@ try:
             # 将提取的信息保存到字典中
             stop_dict = {
                 "stationcode": code,
+                "stationname": find_name_by_code(stations,code,1),
                 "stoptrack": int(track),
                 "arrivetime": time_arrive,
                 "stoptime": int(time_stop)
@@ -432,10 +507,13 @@ try:
             for f in composition:
                 if f not in ['L', 'C', 'P']:
                     notpass = True
+            if composition[0] != "L":
+                notpass = True
             if not notpass:
                 break
             else:
-                messagebox.showerror("Rail Route Schedule Editor", translations['warning.errformat'].format(translations['name.composition']))
+                messagebox.showerror("Rail Route Schedule Editor",
+                                     str(translations['warning.errformat']).format(translations['name.composition']))
 
         # flags
         while True:
@@ -453,10 +531,15 @@ try:
             for f in flags:
                 if f not in ['X', '0', '1']:
                     notpass = True
+            if flags[0] != 'X':
+                notpass = True
+            if len(flags) != 2:
+                notpass = True
             if not notpass:
                 break
             else:
-                messagebox.showerror("Rail Route Schedule Editor",  translations['warning.errformat'].format(translations['name.flag']))
+                messagebox.showerror("Rail Route Schedule Editor",
+                                     translations['warning.errformat'].format(translations['name.flag']))
 
         stops = []
         stopname = []
@@ -466,10 +549,18 @@ try:
             stoptrack.append(i['track'])
         stopname.append("exit")
         while 1:
-            stationselect = get_radio_selection('Rail Route Schedule Editor', translations['info.getstop'], stopname)
+            stationselect = sliding_selector('Rail Route Schedule Editor',
+                                                translations['info.getstop'], stopname)
+            print(stationselect)
+            if stationselect == None:
+                continue
 
             if stationselect == len(stopname) - 1:
-                break
+                if len(stops) >= 2:
+                    break
+                else:
+                    messagebox.showerror("Rail Route Schedule Editor", translations['warning.notenoughstops'])
+                    continue
             stationcode = stations[stationselect]['code']
 
             tracks = gettracks(stations[stationselect]['track'])
@@ -485,7 +576,7 @@ try:
                 if validate_time(arrivetime):
                     correctformat = True
                 else:
-                    messagebox.showerror("Rail Route Schedule Editor",translations['warning.errformat']
+                    messagebox.showerror("Rail Route Schedule Editor", translations['warning.errformat']
                                          .format(translations['name.time']))
             stoptime = get_number_input('Rail Route Shedule Editor',
                                         translations['info.getstoptime'])
@@ -534,6 +625,7 @@ try:
     loggerjava.register_def(get_number_input)
     loggerjava.register_def(addtrain)
     loggerjava.register_def(createcfg)
+    loggerjava.register_def(sliding_selector)
 
     # cfg and translation part
     config_path = 'Rail_route_schedule_editor.cfg'
@@ -542,9 +634,10 @@ try:
         config.read(config_path)
         lang = config['DEFAULT'].get('lang', 'en_us')
     else:
+        logger.warn("no config detected,creating a new one")
         lang = createcfg()
     try:
-        with open(r'.\\translation\\' + lang + '.json', 'r', encoding='utf-8') as f:
+        with open(r'.\\_internal\\translation\\' + lang + '.json', 'r', encoding='utf-8') as f:
             translations = json.load(f)
     except FileNotFoundError as E:
         logger.warn(loggerjava.exceptionhandler.handler(E), showinconsole=True)
@@ -597,7 +690,8 @@ try:
     # main add train
     while 1:
         choice = get_radio_selection("Rail Route Schedule Editor", translations['main.choosefunc'],
-                                     eval(translations['main.funcselection']),returns=True)
+                                     eval(translations['main.funcselection']), returns=True)
+        logger.debug("choice:"+eval(translations['main.funcselection'])[choice])
         if choice == 0:
             display_dict_list(trains)
         elif choice == 1:
@@ -621,5 +715,6 @@ try:
 
 except Exception as E:
     logger.error(logger.handler(E))
+    logger.error("file read:\n"+str(lines))
     messagebox.showerror(translations["exceptionhandler.title"], translations['exceptionhandler.msg'])
     os._exit(105)
