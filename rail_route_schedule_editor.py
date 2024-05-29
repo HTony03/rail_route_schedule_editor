@@ -35,7 +35,7 @@ try:
                         exiting = True
                     else:
                         pass
-                if returnn:
+                elif returnn:
                     if messagebox.askokcancel(translations['tkinter.confirm'], translations['tkinter.returninfo']):
                         root.destroy()
                         exiting = True
@@ -86,6 +86,7 @@ try:
             if result is not None and result != "":
                 return result
             if exiting and checkclose:
+                logger.info("selected close, exit program")
                 os._exit(0)
                 return "-1"
             if returnn and exiting:
@@ -101,17 +102,17 @@ try:
         def calculate_columnspan(index, total_buttons, max_columns=4):
             if total_buttons <= max_columns:
                 # 当总数小于等于4时，计算每个按钮的columnspan
-                return (index + 1) / (total_buttons+1)
+                return (index + 1) / (total_buttons + 1)
             else:
                 # 当总数大于4时，每行4个按钮
-                row = (index+1) // (max_columns+2)
+                row = (index + 1) // (max_columns + 2)
                 col = index % (max_columns)
                 return 1  # 每个按钮占据一列
 
         # 创建主窗口
         root = tk.Tk()
         root.title(title)
-        root.geometry(f"625x%s"%str(250+(len(options)//5+1)*27))
+        root.geometry(f"625x%s" % str(250 + (len(options) // 5 + 1) * 27))
 
         # 窗口内的文字提示
         tk.Label(root, text=prompt).pack(pady=20)
@@ -122,14 +123,12 @@ try:
 
         root.protocol("WM_DELETE_WINDOW", enterperss)
 
-
-
         # 创建一个Frame用于放置按钮，并设置居中
         button_frame = tk.Frame(root)
         button_frame.pack(pady=50, expand=True, fill='x')  # 设置垂直间距并允许扩展
-        #button_frame.pack(expand=True, fill='both')
+        # button_frame.pack(expand=True, fill='both')
 
-        num_columns = max(len(options), 4)+2
+        num_columns = max(len(options), 4) + 2
         for col in range(num_columns):
             button_frame.columnconfigure(col, weight=1)
 
@@ -142,8 +141,7 @@ try:
             columnspan = calculate_columnspan(i, len(options))
             if columnspan > 1:
                 # 如果columnspan大于1，则合并列
-                button_frame.columnconfigure(button_col, minsize=int(root.winfo_width() * columnspan/len(options)))
-
+                button_frame.columnconfigure(button_col, minsize=int(root.winfo_width() * columnspan / len(options)))
 
             def on_button_click(index):
                 var.set(str(index))  # 设置选中的按钮索引
@@ -151,7 +149,7 @@ try:
 
             # 使用lambda和默认参数来捕获当前的i值
             btn = tk.Button(button_frame, text=option, command=lambda idx=i: on_button_click(idx))
-            btn.grid(row=button_row, column=button_col+1, sticky='ew', padx=5)
+            btn.grid(row=button_row, column=button_col + 1, sticky='ew', padx=5)
             buttons.append(btn)
 
             if (i + 1) % 4 == 0 or (i + 1) == len(options):
@@ -159,8 +157,6 @@ try:
                 button_col = 0
             else:
                 button_col += 1
-
-
 
         # 运行窗口
         root.mainloop()
@@ -258,12 +254,12 @@ try:
             label.config(text=label_text)
 
         root = tk.Tk()
-         # 增加了高度以适应更多内容
+        # 增加了高度以适应更多内容
         root.title("Rail Route Schedule Editor")
         root.protocol("WM_DELETE_WINDOW", on_exit)
 
         index = 0
-        root.geometry("550x%s" % str(160 + len(display_nested_structure(dict_list[index]))*20))
+        root.geometry("550x%s" % str(160 + len(display_nested_structure(dict_list[index])) * 20))
         label = tk.Label(root, wraplength=450, justify=tk.LEFT)  # 增加wraplength以换行显示
         label.pack(pady=20)
 
@@ -309,7 +305,6 @@ try:
 
         selected_index = None
 
-
         frame = tk.Frame(top)
         frame.pack(pady=20, padx=20, fill='both', expand=True)
 
@@ -346,7 +341,9 @@ try:
         name = match.group(2)
         track = match.group(4).strip()  # 提取最后一个|后的track数据
 
-        data = {"name": name, "code": code, "track": track}
+        data = {"name": name,
+                "code": code,
+                "track": track}
 
         return data
 
@@ -399,7 +396,7 @@ try:
             # 将提取的信息保存到字典中
             stop_dict = {
                 "stationcode": code,
-                "stationname": find_name_by_code(stations,code,1),
+                "stationname": find_name_by_code(stations, code, 1),
                 "stoptrack": int(track),
                 "arrivetime": time_arrive,
                 "stoptime": int(time_stop)
@@ -550,9 +547,8 @@ try:
         stopname.append("exit")
         while 1:
             stationselect = sliding_selector('Rail Route Schedule Editor',
-                                                translations['info.getstop'], stopname)
-            print(stationselect)
-            if stationselect == None:
+                                             translations['info.getstop'], stopname)
+            if stationselect is None:
                 continue
 
             if stationselect == len(stopname) - 1:
@@ -582,10 +578,16 @@ try:
                                         translations['info.getstoptime'])
 
             stops.append(
-                {'stationcode': stationcode, 'stoptrack': stoptrack,
-                 'arrivetime': arrivetime, 'stoptime': stoptime})
-        trainadd = {'train': num, 'type': typee, 'speedmax': spdmax,
-                    'composition': composition, 'flags': flags, 'stops': stops}
+                {'stationcode': stationcode,
+                 'stoptrack': stoptrack,
+                 'arrivetime': arrivetime,
+                 'stoptime': stoptime})
+        trainadd = {'train': num,
+                    'type': typee,
+                    'speedmax': spdmax,
+                    'composition': composition,
+                    'flags': flags,
+                    'stops': stops}
         logger.debug(
             "Added train:" + str(trainadd))
         return trainadd
@@ -674,6 +676,7 @@ try:
     logger.debug("Created backup file:" + route + "trains_backup.txt")
     stations = []
     trains = []
+    # read stops
     for i in range(5, len(lines)):
         try:
             stations.append(str_to_json_station(lines[i]))
@@ -681,21 +684,21 @@ try:
             linestop = i
             break
 
-    original_txt = copy.deepcopy(lines)
+    original_txt = list(lines)
     original_txt2 = original_txt[:linestop + 22]
     original_txt3 = [item.rstrip('\n') for item in original_txt2]
+    # read trains
     for i in range(linestop + 22, len(lines)):
         trains.append(str_to_json_train(lines[i]))
 
-    # main add train
+    # main sel
     while 1:
+        functions = {0:display_dict_list(trains),1:display_dict_list(stations)}
         choice = get_radio_selection("Rail Route Schedule Editor", translations['main.choosefunc'],
                                      eval(translations['main.funcselection']), returns=True)
-        logger.debug("choice:"+eval(translations['main.funcselection'])[choice])
-        if choice == 0:
-            display_dict_list(trains)
-        elif choice == 1:
-            display_dict_list(stations)
+        logger.debug("choice:" + eval(translations['main.funcselection'])[choice])
+        if choice in functions:
+            functions[choice]
         elif choice == 2:
             train = addtrain()
             if train is not None:
@@ -715,6 +718,6 @@ try:
 
 except Exception as E:
     logger.error(logger.handler(E))
-    logger.error("file read:\n"+str(lines))
+    logger.error("file read:\n" + str(lines))
     messagebox.showerror(translations["exceptionhandler.title"], translations['exceptionhandler.msg'])
     os._exit(105)
