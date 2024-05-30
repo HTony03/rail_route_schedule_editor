@@ -1,17 +1,16 @@
-import copy
+import configparser
+import json
 import os
 import re
 import tkinter as tk
 from tkinter import messagebox
-import loggerjava
-import configparser
-import json
+
+import loggerjava as logger
 
 if __name__ == "__main__":
     pass
 
 # "C:\Users\Administrator\AppData\LocalLow\bitrich\Rail Route\community levels\c6561489-282c-4e95-a084-237969c02e44\\"
-logger = loggerjava
 # route = input("txt route(the folder route contains the trains.txt,last char should be \ ):")
 logger.config(showinconsole=True, name="rail_route_schedule_editor_log")
 logger.clearcurrentlog()
@@ -106,7 +105,7 @@ try:
             else:
                 # 当总数大于4时，每行4个按钮
                 row = (index + 1) // (max_columns + 2)
-                col = index % (max_columns)
+                col = index % max_columns
                 return 1  # 每个按钮占据一列
 
         # 创建主窗口
@@ -331,7 +330,7 @@ try:
 
     def str_to_json_station(input_str):
         # 匹配格式中的变量名、名称和轨道编号
-        match = re.match(r'# (\S+) = ([^\|]+) \| (\d+) \| ([\d, ]+)', input_str)
+        match = re.match(r'# (\S+) = ([^|]+) \| (\d+) \| ([\d, ]+)', input_str)
 
         if not match:
             raise ValueError("输入的格式不正确，请按照 # code = name | MayBeInitial | track 的格式输入")
@@ -390,8 +389,6 @@ try:
         for stop_info in stops_info:
             # 分割站点信息的各个字段
             code, track, time_arrive, time_stop = stop_info.split('#')
-
-            # 提取到达时间和停留时间
 
             # 将提取的信息保存到字典中
             stop_dict = {
@@ -590,7 +587,8 @@ try:
                     'stops': stops}
         logger.debug(
             "Added train:" + str(trainadd))
-        return trainadd
+        trains.append(trainadd)
+        # return trainadd
 
 
     def gettracks(trackstr):
@@ -613,21 +611,21 @@ try:
         return langg[lang]
 
 
-    loggerjava.register_def(json_to_str_train)
-    loggerjava.register_def(str_to_json_train)
-    loggerjava.register_def(str_to_json_stops)
-    loggerjava.register_def(str_to_json_station)
-    loggerjava.register_def(search_train)
-    loggerjava.register_def(validate_time)
-    loggerjava.register_def(find_name_by_code)
-    loggerjava.register_def(display_dict_list)
-    loggerjava.register_def(display_nested_structure)
-    loggerjava.register_def(get_radio_selection)
-    loggerjava.register_def(get_text_input)
-    loggerjava.register_def(get_number_input)
-    loggerjava.register_def(addtrain)
-    loggerjava.register_def(createcfg)
-    loggerjava.register_def(sliding_selector)
+    logger.register_def(json_to_str_train)
+    logger.register_def(str_to_json_train)
+    logger.register_def(str_to_json_stops)
+    logger.register_def(str_to_json_station)
+    logger.register_def(search_train)
+    logger.register_def(validate_time)
+    logger.register_def(find_name_by_code)
+    logger.register_def(display_dict_list)
+    logger.register_def(display_nested_structure)
+    logger.register_def(get_radio_selection)
+    logger.register_def(get_text_input)
+    logger.register_def(get_number_input)
+    logger.register_def(addtrain)
+    logger.register_def(createcfg)
+    logger.register_def(sliding_selector)
 
     # cfg and translation part
     config_path = 'Rail_route_schedule_editor.cfg'
@@ -642,13 +640,13 @@ try:
         with open(r'.\\_internal\\translation\\' + lang + '.json', 'r', encoding='utf-8') as f:
             translations = json.load(f)
     except FileNotFoundError as E:
-        logger.warn(loggerjava.exceptionhandler.handler(E), showinconsole=True)
+        logger.warn(logger.exceptionhandler.handler(E), showinconsole=True)
         messagebox.showerror('Rail Route Schedule Editor', 'Translation file:\\translation\\' + lang +
                              '.json not exist\n')
         os.system("pause")
         os._exit(5)
     except json.JSONDecodeError as E:
-        logger.warn(loggerjava.exceptionhandler.handler(E), showinconsole=True)
+        logger.warn(logger.exceptionhandler.handler(E), showinconsole=True)
         messagebox.showerror('Rail Route Schedule Editor', 'Translation file:\\translation\\' + lang +
                              '.json seems to be broken.\nplease redownload the translation files and replace them')
         os.system("pause")
@@ -664,7 +662,7 @@ try:
         f.close()
 
     except Exception as E:
-        logger.warn(loggerjava.exceptionhandler.handler(E), showinconsole=True)
+        logger.warn(logger.exceptionhandler.handler(E), showinconsole=True)
         messagebox.showerror('Rail Route Schedule Editor', translations["main.fileopenerror"].format(route) + str(E))
         os.system("pause")
         os._exit(5)
@@ -674,6 +672,15 @@ try:
         with open(route + "trains_backup.txt", mode="w", encoding="UTF-8") as f2:
             f2.write(linessss)
     logger.debug("Created backup file:" + route + "trains_backup.txt")
+
+    "---------------"
+    if linessss[0] != "":
+        logger.warn("Invaid file readed!")
+        messagebox.showerror('Rail Route Schedule Editor', translations["main.fileerror"].format(route) + str(E))
+        os.system("pause")
+        os._exit(5)
+
+    "-------------------"
     stations = []
     trains = []
     # read stops
@@ -693,16 +700,12 @@ try:
 
     # main sel
     while 1:
-        functions = {0:display_dict_list(trains),1:display_dict_list(stations)}
+        functions = {0:display_dict_list(trains),1:display_dict_list(stations),2:addtrain()}
         choice = get_radio_selection("Rail Route Schedule Editor", translations['main.choosefunc'],
                                      eval(translations['main.funcselection']), returns=True)
         logger.debug("choice:" + eval(translations['main.funcselection'])[choice])
         if choice in functions:
             functions[choice]
-        elif choice == 2:
-            train = addtrain()
-            if train is not None:
-                trains.append(train)
         elif choice == 3:
             break
         else:
@@ -717,7 +720,10 @@ try:
     os._exit(0)
 
 except Exception as E:
-    logger.error(logger.handler(E))
+    logger.error("----------exceptions---------")
+    logger.error(logger.handler(E),pos="exceptionhandler")
     logger.error("file read:\n" + str(lines))
+    logger.info("current trains:\n" + str(trains))
+    logger.info("current stations:\n" + str(stations))
     messagebox.showerror(translations["exceptionhandler.title"], translations['exceptionhandler.msg'])
     os._exit(105)
