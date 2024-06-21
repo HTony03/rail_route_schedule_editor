@@ -485,13 +485,14 @@ try:
             if not search_train(trains, num):
                 break
             else:
-                messagebox.showerror("Rail Route Schedule Editor", translations["warning.trainnumexist"])
+                messagebox.showerror("Rail Route Schedule Editor", translations["warning.trainnumexist"]%num)
                 logger.warn("train num exists:" + num)
+                return
         # train type
         radio_options = eval(translations['selection.traintype'])
-        type = get_radio_selection("Rail Route Schedule Editor", translations["info.gettraintype"], radio_options)
+        type = get_radio_selection("Rail Route Schedule Editor", translations["info.gettraintype"]%num, radio_options)
         # spdmax
-        spdmax = get_number_input("Rail Route Schedule Editor", translations["info.getmaxspd"])
+        spdmax = get_number_input("Rail Route Schedule Editor", translations["info.getmaxspd"]%num)
         typee = radio_options[type]
 
         # composition
@@ -501,7 +502,7 @@ try:
                                          translations['info.getcomposition.desc2'] +
                                          translations['info.getcomposition.desc3'] +
                                          translations['info.getcomposition.desc4'] +
-                                         translations['info.getcomposition']
+                                         translations['info.getcomposition']%num
                                          , left=True)
             notpass = False
             for f in composition:
@@ -513,7 +514,7 @@ try:
                 break
             else:
                 messagebox.showerror("Rail Route Schedule Editor",
-                                     str(translations['warning.errformat']).format(translations['name.composition']))
+                                     translations['warning.errformat']%translations['name.composition'])
 
         # flags
         while True:
@@ -525,7 +526,7 @@ try:
                                    translations['info.getflag.desc5'] +
                                    translations['info.getflag.desc6'] +
                                    translations['info.getflag.desc7'] +
-                                   translations['info.getflag'], left=True)
+                                   translations['info.getflag']%num, left=True)
 
             notpass = False
             for f in flags:
@@ -539,7 +540,7 @@ try:
                 break
             else:
                 messagebox.showerror("Rail Route Schedule Editor",
-                                     translations['warning.errformat'].format(translations['name.flag']))
+                                     translations['warning.errformat']%translations['name.flag'])
 
         stops = []
         stopname = []
@@ -550,7 +551,7 @@ try:
         stopname.append("exit")
         while 1:
             stationselect = sliding_selector('Rail Route Schedule Editor',
-                                                translations['info.getstop'], stopname)
+                                                translations['info.getstop']%num, stopname)
             print(stationselect)
             if stationselect == None:
                 continue
@@ -576,8 +577,8 @@ try:
                 if validate_time(arrivetime):
                     correctformat = True
                 else:
-                    messagebox.showerror("Rail Route Schedule Editor", translations['warning.errformat']
-                                         .format(translations['name.time']))
+                    messagebox.showerror("Rail Route Schedule Editor",
+                                         translations['warning.errformat']% translations['name.time'])
             stoptime = get_number_input('Rail Route Shedule Editor',
                                         translations['info.getstoptime'])
 
