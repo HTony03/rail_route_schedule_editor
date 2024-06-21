@@ -373,8 +373,6 @@ try:
             if trains['train'] == trainnum:
                 passed = True
                 logger.debug("train test failed.")
-            else:
-                passed = False
         return passed
 
 
@@ -668,16 +666,14 @@ try:
         os.system("pause")
         os._exit(5)
 
-    with open(route + "trains.txt", mode="r", encoding="UTF-8") as f:
-        linessss = f.read()
-        with open(route + "trains_backup.txt", mode="w", encoding="UTF-8") as f2:
-            f2.write(linessss)
+    with open(route + "trains_backup.txt", mode="w", encoding="UTF-8") as f2:
+        f2.writelines(lines)
     logger.debug("Created backup file:" + route + "trains_backup.txt")
 
     "---------------"
-    if linessss[0] != "+++stations\n":
+    if lines[0] != "+++stations\n":
         logger.warn("Invaid file readed!")
-        messagebox.showerror('Rail Route Schedule Editor', translations["main.fileerror"].format(route) + str(E))
+        messagebox.showerror('Rail Route Schedule Editor', translations["main.fileerror"].format(route))
         os.system("pause")
         os._exit(5)
 
@@ -701,12 +697,12 @@ try:
 
     # main sel
     while 1:
-        functions = {0:display_dict_list(trains),1:display_dict_list(stations),2:addtrain()}
+        functions = {0:'display_dict_list(trains)',1:'display_dict_list(stations)',2:'addtrain()'}
         choice = get_radio_selection("Rail Route Schedule Editor", translations['main.choosefunc'],
                                      eval(translations['main.funcselection']), returns=True)
         logger.debug("choice:" + eval(translations['main.funcselection'])[choice])
         if choice in functions:
-            functions[choice]
+            eval(functions[choice])
         elif choice == 3:
             break
         else:

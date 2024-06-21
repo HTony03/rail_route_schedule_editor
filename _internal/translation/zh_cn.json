@@ -11,6 +11,7 @@
   "tkinter.exit": "退出",
   "tkinter.next": "下一个",
   "main.fileopenerror": "打开以下文件时出错: %strains.txt\n即将退出软件...",
+  "main.fileerror": "打开以下文件时出错: %strains.txt\n即将退出软件...",
   "main.choosefunc": "请选择您所需要的功能: ",
   "main.funcselection": "['显示所有列车', '显示所有车站', '添加一个新的列车', '保存&关闭']",
   "main.saveclose": "文件已保存，正在退出....",

@@ -11,6 +11,7 @@
   "tkinter.exit": "exit",
   "tkinter.next": "next",
   "main.fileopenerror": "Error opening the file: %strains.txt\nexiting",
+  "main.fileerror": "Error opening the file: %strains.txt\nexiting",
   "main.choosefunc": "Choose the function:",
   "main.funcselection": "['show trains', 'show stations', 'add a new train', 'save&close']",
   "main.saveexit": "Saved to the file,closing....",
