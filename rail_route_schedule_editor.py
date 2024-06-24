@@ -4,6 +4,7 @@ import os
 import re
 import tkinter as tk
 from tkinter import messagebox
+import time
 
 import loggerjava as logger
 
@@ -12,7 +13,12 @@ if __name__ == "__main__":
 
 # "C:\Users\Administrator\AppData\LocalLow\bitrich\Rail Route\community levels\c6561489-282c-4e95-a084-237969c02e44\\"
 # route = input("txt route(the folder route contains the trains.txt,last char should be \ ):")
-logger.config(showinconsole=True, name="rail_route_schedule_editor_log")
+if not os.path.exists(r'.\log'):
+    os.mkdir(r'.\log')
+logger.config(showinconsole=True,absolutepath=True,route=os.path.join(r'.\log','rail_route_schedule_editor_%s.log'%("%02d_%02d_%02d"
+                                                                           % (time.localtime().tm_hour,
+                                                                              time.localtime().tm_min,
+                                                                              time.localtime().tm_sec))))
 logger.clearcurrentlog()
 try:
     def get_text_input(title, prompt, left=False, checkclose=False, returnn=False):
@@ -477,14 +483,14 @@ try:
             if not search_train(trains, num):
                 break
             else:
-                messagebox.showerror("Rail Route Schedule Editor", translations["warning.trainnumexist"]%num)
+                messagebox.showerror("Rail Route Schedule Editor", translations["warning.trainnumexist"] % num)
                 logger.warn("train num exists:" + num)
                 return
         # train type
         radio_options = eval(translations['selection.traintype'])
-        type = get_radio_selection("Rail Route Schedule Editor", translations["info.gettraintype"]%num, radio_options)
+        type = get_radio_selection("Rail Route Schedule Editor", translations["info.gettraintype"] % num, radio_options)
         # spdmax
-        spdmax = get_number_input("Rail Route Schedule Editor", translations["info.getmaxspd"]%num)
+        spdmax = get_number_input("Rail Route Schedule Editor", translations["info.getmaxspd"] % num)
         typee = radio_options[type]
 
         # composition
@@ -494,7 +500,7 @@ try:
                                          translations['info.getcomposition.desc2'] +
                                          translations['info.getcomposition.desc3'] +
                                          translations['info.getcomposition.desc4'] +
-                                         translations['info.getcomposition']%num
+                                         translations['info.getcomposition'] % num
                                          , left=True)
             notpass = False
             for f in composition:
@@ -506,7 +512,7 @@ try:
                 break
             else:
                 messagebox.showerror("Rail Route Schedule Editor",
-                                     translations['warning.errformat']%translations['name.composition'])
+                                     translations['warning.errformat'] % translations['name.composition'])
 
         # flags
         while True:
@@ -518,7 +524,7 @@ try:
                                    translations['info.getflag.desc5'] +
                                    translations['info.getflag.desc6'] +
                                    translations['info.getflag.desc7'] +
-                                   translations['info.getflag']%num, left=True)
+                                   translations['info.getflag'] % num, left=True)
 
             notpass = False
             for f in flags:
@@ -532,7 +538,7 @@ try:
                 break
             else:
                 messagebox.showerror("Rail Route Schedule Editor",
-                                     translations['warning.errformat']%translations['name.flag'])
+                                     translations['warning.errformat'] % translations['name.flag'])
 
         stops = []
         stopname = []
@@ -543,7 +549,7 @@ try:
         stopname.append("exit")
         while 1:
             stationselect = sliding_selector('Rail Route Schedule Editor',
-                                             translations['info.getstop']%num, stopname)
+                                             translations['info.getstop'] % num, stopname)
             if stationselect is None:
                 continue
 
@@ -569,7 +575,7 @@ try:
                     correctformat = True
                 else:
                     messagebox.showerror("Rail Route Schedule Editor",
-                                         translations['warning.errformat']% translations['name.time'])
+                                         translations['warning.errformat'] % translations['name.time'])
             stoptime = get_number_input('Rail Route Shedule Editor',
                                         translations['info.getstoptime'])
 
@@ -697,7 +703,7 @@ try:
 
     # main sel
     while 1:
-        functions = {0:'display_dict_list(trains)',1:'display_dict_list(stations)',2:'addtrain()'}
+        functions = {0: 'display_dict_list(trains)', 1: 'display_dict_list(stations)', 2: 'addtrain()'}
         choice = get_radio_selection("Rail Route Schedule Editor", translations['main.choosefunc'],
                                      eval(translations['main.funcselection']), returns=True)
         logger.debug("choice:" + eval(translations['main.funcselection'])[choice])
@@ -718,7 +724,7 @@ try:
 
 except Exception as E:
     logger.error("----------exceptions---------")
-    logger.error(logger.handler(E),pos="exceptionhandler")
+    logger.error(logger.handler(E), pos="exceptionhandler")
     logger.error("file read:\n" + str(lines))
     logger.info("current trains:\n" + str(trains))
     logger.info("current stations:\n" + str(stations))
